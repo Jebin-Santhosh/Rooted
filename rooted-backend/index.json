@@ -1,0 +1,79 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-01-07",
+  "collections": {
+    "general": {
+      "description": "General dental reference materials and textbooks covering multiple specialties",
+      "documents": [
+        {
+          "id": "document_000002",
+          "title": "Endodontics: Principles and Practice",
+          "subject": "endodontics",
+          "description": "Comprehensive endodontics textbook covering all aspects of root canal therapy and pulp biology. This is the primary reference for all endodontic procedures, diagnosis, and treatment planning.",
+          "covers": [
+            "Pulp anatomy and histology",
+            "Pulp and periapical pathology",
+            "Diagnosis of pulp diseases",
+            "Treatment planning in endodontics",
+            "Access cavity preparation",
+            "Working length determination (electronic apex locators, radiographic methods)",
+            "Root canal instrumentation techniques (step-back, crown-down, hybrid)",
+            "Root canal irrigation and disinfection (NaOCl, EDTA, CHX, activated irrigation)",
+            "Intracanal medicaments (calcium hydroxide, antibiotics)",
+            "Obturation techniques (lateral condensation, vertical condensation, thermoplasticized gutta-percha)",
+            "Single visit vs multiple visit endodontics",
+            "Endodontic emergencies and flare-ups",
+            "Management of open apex (apexification, apexogenesis, revascularization)",
+            "Vital pulp therapy (direct/indirect pulp capping, pulpotomy)",
+            "Retreatment and non-surgical revision",
+            "Endodontic surgery (apicoectomy, root-end filling)",
+            "Endodontic-periodontal lesions",
+            "Traumatic dental injuries",
+            "Internal and external root resorption",
+            "Endodontic microbiology",
+            "Pain management in endodontics",
+            "Instrument separation and retrieval",
+            "Perforations and their management",
+            "Bleaching of endodontically treated teeth",
+            "Post-endodontic restoration"
+          ],
+          "keywords": [
+            "root canal", "RCT", "pulpitis", "periapical abscess", "necrotic pulp",
+            "working length", "apex locator", "K-file", "H-file", "rotary files",
+            "NiTi instruments", "ProTaper", "WaveOne", "sodium hypochlorite",
+            "EDTA", "gutta-percha", "sealer", "obturation", "lateral condensation",
+            "warm vertical", "MTA", "calcium hydroxide", "pulp capping",
+            "apexification", "revascularization", "regenerative endodontics",
+            "apicoectomy", "retrograde filling", "endo-perio lesion"
+          ],
+          "chroma_path": "/data/general/document_000002/chroma_db",
+          "pdf_path": "/data/general/document_000002/000002.pdf",
+          "pages": 450,
+          "embedding_model": "text-embedding-004"
+        }
+      ]
+    },
+    "year_1": {
+      "description": "First year BDS curriculum - Basic sciences foundation",
+      "documents": []
+    },
+    "year_2": {
+      "description": "Second year BDS curriculum - Pre-clinical subjects",
+      "documents": []
+    },
+    "year_3": {
+      "description": "Third year BDS curriculum - Clinical subjects introduction",
+      "documents": []
+    },
+    "year_4": {
+      "description": "Fourth year BDS curriculum - Advanced clinical training",
+      "documents": []
+    }
+  },
+  "subject_mapping": {
+    "endodontics": ["general"],
+    "conservative_dentistry": ["general"],
+    "root_canal": ["general"],
+    "pulp_therapy": ["general"]
+  }
+}

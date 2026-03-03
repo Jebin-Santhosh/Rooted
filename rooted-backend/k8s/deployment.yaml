@@ -1,0 +1,72 @@
+# RootED Backend - Kubernetes Deployment
+# For future scaling with EKS or any K8s cluster
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rooted-api
+  labels:
+    app: rooted-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: rooted-api
+  template:
+    metadata:
+      labels:
+        app: rooted-api
+    spec:
+      containers:
+        - name: rooted-api
+          image: rooted-api:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: rooted-secrets
+                  key: gemini-api-key
+            - name: GEMINI_MODEL
+              value: "gemini-2.0-flash-exp"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rooted-api-service
+spec:
+  selector:
+    app: rooted-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rooted-secrets
+type: Opaque
+stringData:
+  gemini-api-key: ${GOOGLE_API_KEY}

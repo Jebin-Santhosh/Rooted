@@ -1,0 +1,27 @@
+# RootED Backend Dependencies
+
+# Web Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# LangChain & LangGraph
+langchain
+langchain-google-genai
+langgraph
+
+# Google AI
+google-generativeai
+google-genai
+
+# Vector Database
+chromadb>=0.5.23
+
+# Firebase Admin SDK
+firebase-admin>=6.0.0
+
+# Utilities
+python-dotenv
+pydantic
+
+# Production server
+gunicorn

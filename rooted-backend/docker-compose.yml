@@ -1,0 +1,44 @@
+# RootED Backend - Docker Compose Configuration
+version: '3.8'
+
+services:
+  # Main API Service with RAG
+  rooted-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rooted-api
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.0-flash-exp}
+      - DATA_PATH=/data
+      - INDEX_PATH=/app/index.json
+      - FIREBASE_CREDENTIALS_PATH=/app/firebase-credentials.json
+    volumes:
+      # Mount EBS data volume for ChromaDB and PDFs
+      - /data:/data
+      # Mount Firebase credentials
+      - ./firebase-credentials.json:/app/firebase-credentials.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - rooted-network
+    # Resource limits for t2.micro (1GB RAM)
+    # Increased for ChromaDB operations
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 384M
+
+networks:
+  rooted-network:
+    driver: bridge
