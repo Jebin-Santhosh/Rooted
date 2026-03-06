@@ -43,7 +43,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 EMBEDDING_MODEL = "text-embedding-004"
 DATA_PATH = os.getenv("DATA_PATH", "/data")
-INDEX_PATH = os.getenv("INDEX_PATH", "/app/index.json")
+INDEX_PATH = os.getenv("INDEX_PATH", "/rooted-backend/index.json")
 
 # Agent Configuration
 MAX_RESEARCH_ITERATIONS = 5
@@ -81,7 +81,7 @@ def init_firebase():
             # Check multiple possible paths for credentials
             possible_paths = [
                 os.getenv("FIREBASE_CREDENTIALS_PATH", ""),
-                "/app/firebase-credentials.json",  # Docker path
+                "/rooted-backend/firebase-credentials.json",  # Docker path
                 os.path.join(os.path.dirname(__file__), "firebase-credentials.json"),  # Local dev
                 os.path.join(os.path.dirname(__file__), "rooted.json"),  # Alternative name
             ]

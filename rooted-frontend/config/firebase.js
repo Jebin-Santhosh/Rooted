@@ -41,14 +41,23 @@ import {
 import { Platform } from 'react-native';
 
 // Firebase configuration
+// const firebaseConfig = {
+//   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+//   authDomain: "rooted-b8903.firebaseapp.com",
+//   projectId: "rooted-b8903",
+//   storageBucket: "rooted-b8903.firebasestorage.app",
+//   messagingSenderId: "615371621072",
+//   appId: "1:615371621072:web:a62407b2644d1b8ba894d5",
+//   measurementId: "G-V2JQB0J0N6"
+// };
+
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: "rooted-b8903.firebaseapp.com",
-  projectId: "rooted-b8903",
-  storageBucket: "rooted-b8903.firebasestorage.app",
-  messagingSenderId: "615371621072",
-  appId: "1:615371621072:web:a62407b2644d1b8ba894d5",
-  measurementId: "G-V2JQB0J0N6"
+  authDomain: "rooted-a4947.firebaseapp.com",
+  projectId: "rooted-a4947",
+  storageBucket: "rooted-a4947.firebasestorage.app",
+  messagingSenderId: "715666071325",
+  appId: "1:715666071325:web:af00ab95d1193a3d730bf4"
 };
 
 // Initialize Firebase

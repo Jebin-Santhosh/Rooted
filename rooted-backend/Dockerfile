@@ -51,7 +51,7 @@ USER appuser
 
 # Environment variables
 ENV DATA_PATH=/data
-ENV INDEX_PATH=/app/index.json
+ENV INDEX_PATH=/rooted-backend/index.json
 
 # Expose port
 EXPOSE 8000

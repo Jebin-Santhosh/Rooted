@@ -6,11 +6,12 @@
 import { Platform } from 'react-native';
 
 // Backend URL
-const PRODUCTION_URL = 'http://13.61.162.222:8000';
+// const PRODUCTION_URL = 'http://13.61.162.222:8000';
 const LOCAL_URL = 'http://localhost:8000';
 
 // Use production URL (EC2)
-export const API_BASE_URL = PRODUCTION_URL;
+// export const API_BASE_URL = PRODUCTION_URL;
+export const API_BASE_URL = LOCAL_URL;
 
 /**
  * Send a chat message and get response

@@ -23,8 +23,8 @@ scp -i your-key.pem firebase-credentials.json ec2-user@13.61.162.222:/home/ec2-u
 
 # On EC2, move to the app directory
 ssh -i your-key.pem ec2-user@13.61.162.222
-sudo mv /home/ec2-user/rooted/firebase-credentials.json /app/firebase-credentials.json
-sudo chmod 600 /app/firebase-credentials.json
+sudo mv /home/ec2-user/rooted/firebase-credentials.json /rooted-backend/firebase-credentials.json
+sudo chmod 600 /rooted-backend/firebase-credentials.json
 ```
 
 ### 3. Environment Variable (Alternative)
@@ -38,7 +38,7 @@ export FIREBASE_CREDENTIALS_PATH=/path/to/firebase-credentials.json
 Or for Docker:
 
 ```dockerfile
-ENV FIREBASE_CREDENTIALS_PATH=/app/firebase-credentials.json
+ENV FIREBASE_CREDENTIALS_PATH=/rooted-backend/firebase-credentials.json
 ```
 
 ### 4. Verify Setup
@@ -51,7 +51,7 @@ docker logs rooted-backend
 
 You should see:
 ```
-Firebase initialized with credentials from /app/firebase-credentials.json
+Firebase initialized with credentials from /rooted-backend/firebase-credentials.json
 Firestore client initialized successfully
 ```
 
