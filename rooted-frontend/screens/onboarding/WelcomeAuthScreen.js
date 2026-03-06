@@ -105,10 +105,7 @@ const WelcomeAuthScreen = () => {
         end={{ x: 1, y: 1 }}
       />
 
-      {/* Decorative circles - blue theme */}
-      <View style={[styles.decorativeCircle, styles.circle1]} />
-      <View style={[styles.decorativeCircle, styles.circle2]} />
-      <View style={[styles.decorativeCircle, styles.circle3]} />
+      {/* Clean background - no decorative elements */}
 
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centerWrapper}>
@@ -242,35 +239,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[8],
   },
 
-  // Decorative elements - blue theme
-  decorativeCircle: {
-    position: 'absolute',
-    borderRadius: 999,
-  },
-  circle1: {
-    width: 300,
-    height: 300,
-    backgroundColor: colors.primary[200],
-    opacity: 0.4,
-    top: -100,
-    right: -100,
-  },
-  circle2: {
-    width: 200,
-    height: 200,
-    backgroundColor: colors.secondary[200],
-    opacity: 0.3,
-    bottom: 100,
-    left: -80,
-  },
-  circle3: {
-    width: 150,
-    height: 150,
-    backgroundColor: colors.primary[100],
-    opacity: 0.5,
-    top: height * 0.3,
-    right: -50,
-  },
+  // Decorative circles removed for clean design
 
   // Logo Section
   logoSection: {
@@ -294,13 +263,13 @@ const styles = StyleSheet.create({
   featureCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.glass.card,
+    backgroundColor: '#FFFFFF',
     paddingVertical: spacing[4],
     paddingHorizontal: spacing[5],
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: colors.glass.whiteLight,
-    ...shadows.glass,
+    borderColor: colors.neutral[200],
+    ...shadows.sm,
   },
   featureIconContainer: {
     width: 48,

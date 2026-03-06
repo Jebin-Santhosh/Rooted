@@ -255,6 +255,34 @@ const AppContent = ({ fontsLoaded }) => {
   );
 };
 
+// Error Boundary for catching runtime errors
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('App Error Boundary caught:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, backgroundColor: '#fff' }}>
+          <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#EF4444', marginBottom: 16 }}>Something went wrong</Text>
+          <Text style={{ fontSize: 14, color: '#333', textAlign: 'center' }}>{this.state.error?.message || 'Unknown error'}</Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
@@ -279,20 +307,22 @@ export default function App() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      {/* Global glassy gradient background */}
-      <LinearGradient
-        colors={colors.gradients.background}
-        style={StyleSheet.absoluteFillObject}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
-      <SafeAreaProvider>
-        <ThemeProvider>
-          <ThemedRoot fontsLoaded={fontsLoaded} />
-        </ThemeProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={styles.container}>
+        {/* Global glassy gradient background */}
+        <LinearGradient
+          colors={colors.gradients.background}
+          style={StyleSheet.absoluteFillObject}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+        <SafeAreaProvider>
+          <ThemeProvider>
+            <ThemedRoot fontsLoaded={fontsLoaded} />
+          </ThemeProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 

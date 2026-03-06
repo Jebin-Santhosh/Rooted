@@ -249,11 +249,7 @@ const LandingPage = () => {
         end={{ x: 1, y: 1 }}
       />
 
-      {/* Decorative circles - blue theme */}
-      <View style={[styles.decorativeCircle, styles.circle1, isDark && styles.circleDark]} />
-      <View style={[styles.decorativeCircle, styles.circle2, isDark && styles.circleDark]} />
-      <View style={[styles.decorativeCircle, styles.circle3, isDark && styles.circleDark]} />
-      <View style={[styles.decorativeCircle, styles.circle4, isDark && styles.circleDark]} />
+      {/* Clean background - no decorative elements */}
 
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
@@ -345,7 +341,7 @@ const LandingPage = () => {
                     <TouchableOpacity style={styles.heroPrimaryBtn} onPress={handleGetStarted}>
                       <View style={styles.heroPrimaryBtnGlassy}>
                         <Text style={styles.heroPrimaryBtnText}>Start Learning Free</Text>
-                        <Feather name="arrow-right" size={20} color={colors.primary[600]} style={{ marginLeft: 8 }} />
+                        <Feather name="arrow-right" size={20} color="#FFFFFF" style={{ marginLeft: 8 }} />
                       </View>
                     </TouchableOpacity>
                   </View>
@@ -524,7 +520,7 @@ const LandingPage = () => {
                 <TouchableOpacity style={styles.ctaButton} onPress={handleGetStarted}>
                   <View style={styles.ctaButtonGlassy}>
                     <Text style={styles.ctaButtonText}>Get Started Free</Text>
-                    <Feather name="arrow-right" size={18} color={colors.primary[600]} style={{ marginLeft: 8 }} />
+                    <Feather name="arrow-right" size={18} color="#FFFFFF" style={{ marginLeft: 8 }} />
                   </View>
                 </TouchableOpacity>
               </FadeIn>
@@ -567,46 +563,7 @@ const styles = StyleSheet.create({
   backgroundGradient: {
     ...StyleSheet.absoluteFillObject,
   },
-  // Decorative circles - blue theme
-  decorativeCircle: {
-    position: 'absolute',
-    borderRadius: 999,
-  },
-  circle1: {
-    width: 400,
-    height: 400,
-    backgroundColor: colors.primary[200],
-    opacity: 0.35,
-    top: -150,
-    right: -150,
-  },
-  circle2: {
-    width: 300,
-    height: 300,
-    backgroundColor: colors.secondary[200],
-    opacity: 0.25,
-    bottom: 200,
-    left: -120,
-  },
-  circle3: {
-    width: 200,
-    height: 200,
-    backgroundColor: colors.primary[100],
-    opacity: 0.4,
-    top: '40%',
-    right: -80,
-  },
-  circle4: {
-    width: 250,
-    height: 250,
-    backgroundColor: colors.primary[100],
-    opacity: 0.3,
-    top: '60%',
-    left: -100,
-  },
-  circleDark: {
-    opacity: 0.2,
-  },
+  // Decorative circles removed for clean design
   safeArea: {
     flex: 1,
   },
@@ -621,10 +578,10 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 24,
     paddingVertical: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     backdropFilter: 'blur(10px)',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.3)',
+    borderBottomColor: colors.neutral[200],
   },
   headerInner: {
     flexDirection: 'row',
@@ -709,15 +666,14 @@ const styles = StyleSheet.create({
   heroBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    backgroundColor: colors.primary[50],
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 100,
     alignSelf: 'flex-start',
     marginBottom: 24,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
-    backdropFilter: 'blur(16px)',
+    borderWidth: 1,
+    borderColor: colors.primary[200],
   },
   heroBadgeDot: {
     width: 8,
@@ -742,7 +698,7 @@ const styles = StyleSheet.create({
   },
   heroSubtitle: {
     fontFamily: typography.fontFamily.regular,
-    color: colors.neutral[500],
+    color: colors.neutral[600],
     marginBottom: 32,
     lineHeight: 28,
   },
@@ -768,16 +724,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 32,
     paddingVertical: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: colors.primary[500],
     borderRadius: 14,
-    backdropFilter: 'blur(20px)',
   },
   heroPrimaryBtnText: {
     fontSize: 16,
     fontFamily: typography.fontFamily.semiBold,
-    color: colors.primary[600],
+    color: '#FFFFFF',
   },
   heroSecondaryBtn: {
     paddingHorizontal: 24,
@@ -805,17 +758,16 @@ const styles = StyleSheet.create({
     maxWidth: 480,
   },
   chatPreview: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
     shadowColor: colors.neutral[900],
     shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.1,
     shadowRadius: 40,
     elevation: 10,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
-    backdropFilter: 'blur(24px)',
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
   },
   chatPreviewHeader: {
     flexDirection: 'row',
@@ -823,7 +775,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.5)',
+    borderBottomColor: colors.neutral[200],
     marginBottom: 16,
   },
   chatPreviewHeaderLeft: {
@@ -872,8 +824,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
     alignSelf: 'flex-end',
     maxWidth: '85%',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   userMsgText: {
     fontSize: 14,
@@ -882,14 +832,14 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   aiMsg: {
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: colors.neutral[50],
     padding: 14,
     borderRadius: 16,
     borderBottomLeftRadius: 4,
     alignSelf: 'flex-start',
     maxWidth: '90%',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
+    borderColor: colors.neutral[200],
   },
   aiMsgText: {
     fontSize: 14,
@@ -907,10 +857,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 16,
     padding: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    backgroundColor: colors.neutral[100],
     borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
   },
   chatInputPlaceholder: {
     fontSize: 14,
@@ -941,7 +891,7 @@ const styles = StyleSheet.create({
   sectionSubtitle: {
     fontSize: 17,
     fontFamily: typography.fontFamily.regular,
-    color: colors.neutral[500],
+    color: colors.neutral[600],
     textAlign: 'center',
     maxWidth: 500,
   },
@@ -950,7 +900,7 @@ const styles = StyleSheet.create({
   featuresSection: {
     paddingHorizontal: 24,
     paddingVertical: 80,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
   },
   featuresGrid: {
     flexDirection: 'row',
@@ -965,18 +915,17 @@ const styles = StyleSheet.create({
     // Width set dynamically
   },
   featureCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 28,
     height: 220,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
     shadowColor: colors.neutral[900],
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
     elevation: 3,
-    backdropFilter: 'blur(20px)',
   },
   featureCardHovered: {
     borderColor: colors.primary[200],
@@ -1005,14 +954,14 @@ const styles = StyleSheet.create({
   featureDescription: {
     fontSize: 15,
     fontFamily: typography.fontFamily.regular,
-    color: colors.neutral[500],
+    color: colors.neutral[600],
     lineHeight: 22,
   },
 
   // Story
   storyGradient: {
     width: '100%',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
   },
   storySection: {
     paddingHorizontal: 24,
@@ -1022,21 +971,20 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   storyCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     marginBottom: 48,
     alignSelf: 'center',
     width: '100%',
     maxWidth: 900,
     shadowColor: colors.neutral[900],
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.1,
-    shadowRadius: 32,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
     elevation: 4,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
     overflow: 'hidden',
-    backdropFilter: 'blur(24px)',
   },
   storyLeft: {
     padding: 40,
@@ -1093,20 +1041,19 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   statCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     paddingVertical: 24,
     paddingHorizontal: 32,
     alignItems: 'center',
     minWidth: 140,
     shadowColor: colors.neutral[900],
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
     elevation: 3,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
-    backdropFilter: 'blur(20px)',
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
   },
   statValue: {
     fontSize: 32,
@@ -1117,30 +1064,29 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 14,
     fontFamily: typography.fontFamily.medium,
-    color: colors.neutral[500],
+    color: colors.neutral[600],
   },
 
   // About
   aboutSection: {
     paddingHorizontal: 24,
     paddingVertical: 80,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
   },
   founderCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     maxWidth: 900,
     width: '100%',
     alignSelf: 'center',
     shadowColor: colors.neutral[900],
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.1,
-    shadowRadius: 32,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
     elevation: 4,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
     overflow: 'hidden',
-    backdropFilter: 'blur(24px)',
   },
   founderLeft: {
     padding: 40,
@@ -1211,15 +1157,14 @@ const styles = StyleSheet.create({
     maxWidth: 900,
     width: '100%',
     alignSelf: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: colors.primary[50],
+    borderWidth: 1,
+    borderColor: colors.primary[200],
     shadowColor: colors.neutral[900],
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.1,
-    shadowRadius: 32,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
     elevation: 4,
-    backdropFilter: 'blur(24px)',
   },
   ctaTitle: {
     fontFamily: typography.fontFamily.bold,
@@ -1252,16 +1197,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 36,
     paddingVertical: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: colors.primary[500],
     borderRadius: 14,
-    backdropFilter: 'blur(20px)',
   },
   ctaButtonText: {
     fontSize: 16,
     fontFamily: typography.fontFamily.semiBold,
-    color: colors.primary[600],
+    color: '#FFFFFF',
   },
 
   // Footer
@@ -1269,8 +1211,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 40,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.4)',
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderTopColor: colors.neutral[200],
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
   },
   footerTop: {
     alignItems: 'center',

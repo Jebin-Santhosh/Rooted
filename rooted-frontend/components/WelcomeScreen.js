@@ -79,10 +79,7 @@ export default function WelcomeScreen({
         end={{ x: 1, y: 1 }}
       />
 
-      {/* Decorative circles - blue theme matching landing page */}
-      <View style={[styles.decorativeCircle, styles.circle1, isDark && styles.circleDark]} />
-      <View style={[styles.decorativeCircle, styles.circle2, isDark && styles.circleDark]} />
-      <View style={[styles.decorativeCircle, styles.circle3, isDark && styles.circleDark]} />
+      {/* Clean background - no decorative elements */}
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -160,38 +157,7 @@ const styles = StyleSheet.create({
   backgroundGradient: {
     ...StyleSheet.absoluteFillObject,
   },
-  // Decorative circles - matching landing page
-  decorativeCircle: {
-    position: 'absolute',
-    borderRadius: 999,
-  },
-  circle1: {
-    width: 300,
-    height: 300,
-    backgroundColor: colors.primary[200],
-    opacity: 0.35,
-    top: -100,
-    right: -100,
-  },
-  circle2: {
-    width: 200,
-    height: 200,
-    backgroundColor: colors.secondary[200],
-    opacity: 0.25,
-    bottom: 100,
-    left: -80,
-  },
-  circle3: {
-    width: 150,
-    height: 150,
-    backgroundColor: colors.primary[100],
-    opacity: 0.4,
-    top: '50%',
-    right: -60,
-  },
-  circleDark: {
-    opacity: 0.18,
-  },
+  // Decorative circles removed for clean design
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -230,22 +196,21 @@ const styles = StyleSheet.create({
     marginBottom: spacing[8],
   },
   inputCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: '#FFFFFF',
     borderRadius: borderRadius.xl,
     padding: spacing[1],
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
     ...Platform.select({
       web: {
-        backdropFilter: 'blur(20px)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
       },
       default: {
         shadowColor: colors.neutral[900],
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.08,
-        shadowRadius: 24,
-        elevation: 4,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 16,
+        elevation: 3,
       },
     }),
   },
@@ -279,21 +244,20 @@ const styles = StyleSheet.create({
     gap: spacing[2],
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    backgroundColor: '#FFFFFF',
     borderRadius: borderRadius.lg,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
     ...Platform.select({
       web: {
-        backdropFilter: 'blur(16px)',
-        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
       },
       default: {
         shadowColor: colors.neutral[900],
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.06,
-        shadowRadius: 16,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+        elevation: 1,
       },
     }),
   },
@@ -304,7 +268,7 @@ const styles = StyleSheet.create({
   suggestionText: {
     fontSize: typography.fontSize.sm,
     fontFamily: typography.fontFamily.medium,
-    color: colors.neutral[600],
+    color: colors.neutral[700],
   },
   suggestionTextDark: {
     color: colors.neutral[100],

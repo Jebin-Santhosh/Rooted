@@ -133,18 +133,18 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: colors.neutral[50],
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.9)',
+    borderColor: colors.neutral[200],
     minHeight: 52,
     maxHeight: 200,
     paddingHorizontal: spacing[2],
     paddingVertical: spacing[1],
   },
   containerFocused: {
-    borderColor: colors.primary[300],
-    backgroundColor: 'rgba(255, 255, 255, 0.97)',
+    borderColor: colors.primary[400],
+    backgroundColor: '#FFFFFF',
   },
   containerDark: {
     backgroundColor: 'rgba(30, 41, 59, 0.95)',
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[2],
     paddingVertical: spacing[2],
     fontSize: typography.fontSize.base,
-    color: colors.neutral[50],
+    color: colors.neutral[800],
     lineHeight: typography.fontSize.base * typography.lineHeight.normal,
     maxHeight: 150,
     ...(Platform.OS === 'web' && {

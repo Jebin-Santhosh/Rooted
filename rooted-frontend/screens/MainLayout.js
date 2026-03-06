@@ -294,9 +294,9 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.72)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
+    borderColor: colors.neutral[200],
   },
   glassShellDark: {
     backgroundColor: 'rgba(15, 23, 42, 0.9)',
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    backgroundColor: '#FFFFFF',
   },
   mainContentDark: {
     backgroundColor: 'rgba(15, 23, 42, 0.85)',
@@ -322,10 +322,10 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    backgroundColor: colors.neutral[50],
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.85)',
+    borderColor: colors.neutral[200],
   },
   themeToggleButton: {
     position: 'absolute',

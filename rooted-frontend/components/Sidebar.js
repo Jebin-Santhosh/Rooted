@@ -173,9 +173,7 @@ export default function Sidebar({
           end={{ x: 1, y: 1 }}
         />
 
-        {/* Decorative circles */}
-        <View style={[styles.decorativeCircle, styles.circle1]} />
-        <View style={[styles.decorativeCircle, styles.circle2]} />
+        {/* Clean background - no decorative elements */}
 
         {/* Logo & New Chat */}
         <View style={styles.header}>
@@ -335,7 +333,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     zIndex: 1,
     borderRightWidth: 1,
-    borderRightColor: 'rgba(255, 255, 255, 0.5)',
+    borderRightColor: colors.neutral[200],
   },
   sidebarDark: {
     borderRightColor: 'rgba(15, 23, 42, 0.9)',
@@ -343,27 +341,7 @@ const styles = StyleSheet.create({
   backgroundGradient: {
     ...StyleSheet.absoluteFillObject,
   },
-  // Decorative circles
-  decorativeCircle: {
-    position: 'absolute',
-    borderRadius: 999,
-  },
-  circle1: {
-    width: 200,
-    height: 200,
-    backgroundColor: colors.primary[200],
-    opacity: 0.3,
-    top: -80,
-    right: -80,
-  },
-  circle2: {
-    width: 150,
-    height: 150,
-    backgroundColor: colors.secondary[200],
-    opacity: 0.2,
-    bottom: 100,
-    left: -60,
-  },
+  // Decorative circles removed for clean design
   header: {
     paddingHorizontal: spacing[4],
     marginBottom: spacing[4],
@@ -426,9 +404,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing[1],
   },
   chatHistoryItemActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: colors.primary[50],
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
+    borderColor: colors.primary[200],
   },
   chatHistoryTitle: {
     flex: 1,
@@ -459,7 +437,7 @@ const styles = StyleSheet.create({
   // Profile Section
   profileSection: {
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.5)',
+    borderTopColor: colors.neutral[200],
     paddingTop: spacing[3],
     paddingHorizontal: spacing[3],
     zIndex: 1,
@@ -468,16 +446,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing[3],
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderRadius: borderRadius.md,
     gap: spacing[3],
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
-    ...Platform.select({
-      web: {
-        backdropFilter: 'blur(12px)',
-      },
-    }),
+    borderColor: colors.neutral[200],
   },
   profileAvatar: {
     width: 40,
@@ -523,14 +496,13 @@ const styles = StyleSheet.create({
   // Profile Menu
   profileMenu: {
     marginTop: spacing[2],
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: '#FFFFFF',
     borderRadius: borderRadius.md,
     paddingVertical: spacing[1],
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
+    borderColor: colors.neutral[200],
     ...Platform.select({
       web: {
-        backdropFilter: 'blur(12px)',
         boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
       },
       default: {

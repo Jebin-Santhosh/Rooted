@@ -164,9 +164,7 @@ const DetailsInputScreen = () => {
         end={{ x: 1, y: 1 }}
       />
 
-      {/* Decorative elements */}
-      <View style={[styles.decorativeCircle, styles.circle1]} />
-      <View style={[styles.decorativeCircle, styles.circle2]} />
+      {/* Clean background - no decorative elements */}
 
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
@@ -405,27 +403,7 @@ const styles = StyleSheet.create({
     maxWidth: isWeb ? layout.maxContentWidth : '100%',
   },
 
-  // Decorative elements
-  decorativeCircle: {
-    position: 'absolute',
-    borderRadius: 999,
-  },
-  circle1: {
-    width: 250,
-    height: 250,
-    backgroundColor: colors.primary[200],
-    opacity: 0.4,
-    top: -80,
-    right: -80,
-  },
-  circle2: {
-    width: 180,
-    height: 180,
-    backgroundColor: colors.secondary[200],
-    opacity: 0.3,
-    bottom: 150,
-    left: -60,
-  },
+  // Decorative circles removed for clean design
 
   // Header
   header: {
@@ -439,7 +417,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.glass.card,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     ...shadows.sm,
@@ -449,7 +427,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 6,
-    backgroundColor: colors.glass.whiteSoft,
+    backgroundColor: colors.neutral[200],
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -528,7 +506,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[3],
     paddingHorizontal: spacing[5],
     borderRadius: borderRadius.md,
-    backgroundColor: colors.glass.card,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
     borderColor: colors.neutral[200],
     ...shadows.xs,
@@ -550,7 +528,7 @@ const styles = StyleSheet.create({
 
   // Input
   input: {
-    backgroundColor: colors.glass.card,
+    backgroundColor: '#FFFFFF',
     paddingVertical: spacing[4],
     paddingHorizontal: spacing[5],
     borderRadius: borderRadius.lg,

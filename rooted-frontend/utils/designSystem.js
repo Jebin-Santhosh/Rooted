@@ -87,14 +87,14 @@ export const colors = {
     900: '#0F172A',
   },
 
-  // Glass effects
+  // Glass effects - made more opaque for better text readability
   glass: {
-    white: 'rgba(255, 255, 255, 0.85)',
-    whiteSoft: 'rgba(255, 255, 255, 0.6)',
-    whiteLight: 'rgba(255, 255, 255, 0.4)',
-    blueTint: 'rgba(219, 234, 254, 0.5)',
-    card: 'rgba(255, 255, 255, 0.9)',
-    cardHover: 'rgba(255, 255, 255, 0.95)',
+    white: 'rgba(255, 255, 255, 0.95)',
+    whiteSoft: 'rgba(255, 255, 255, 0.85)',
+    whiteLight: 'rgba(255, 255, 255, 0.75)',
+    blueTint: 'rgba(219, 234, 254, 0.7)',
+    card: '#FFFFFF',
+    cardHover: '#FFFFFF',
   },
 
   // Semantic colors - keeping blue theme
@@ -321,13 +321,13 @@ export const layout = {
 export const components = {
   chatMaxWidth: isWeb ? 800 : '100%',
 
-  // Glass card style
+  // Card style - clean and solid
   glassCard: {
-    backgroundColor: colors.glass.card,
+    backgroundColor: '#FFFFFF',
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
-    ...shadows.glass,
+    borderColor: colors.neutral[200],
+    ...shadows.sm,
   },
 
   // Input field

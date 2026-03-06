@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[3],
     paddingBottom: spacing[3],
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.4)',
+    borderBottomColor: colors.neutral[200],
   },
   headerTitle: {
     fontSize: typography.fontSize.lg,
@@ -244,9 +244,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginHorizontal: spacing[0],
     marginVertical: spacing[1],
-    backgroundColor: 'rgba(255, 255, 255, 0.55)',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.8)',
+    borderColor: colors.neutral[200],
     ...shadows.xs,
   },
   activeConversation: {

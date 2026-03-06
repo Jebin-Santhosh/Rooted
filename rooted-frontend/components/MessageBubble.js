@@ -198,11 +198,11 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   assistantBubble: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: colors.neutral[50],
     borderRadius: borderRadius['2xl'],
     borderTopLeftRadius: borderRadius.sm,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.95)',
+    borderColor: colors.neutral[200],
     flex: 1,
     maxWidth: '85%',
     ...shadows.xs,
