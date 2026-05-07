@@ -23,7 +23,7 @@ import Sidebar from '../components/Sidebar';
 import ChatScreen from './ChatScreen';
 import PDFSidePanel from '../components/PDFSidePanel';
 import { useOnboarding } from '../context/OnboardingContext';
-import { getUserConversations } from '../config/firebase';
+import { getUserConversations, updateConversationTitle } from '../config/firebase';
 import apiService from '../services/api';
 import designSystem from '../utils/designSystem';
 import { useThemeMode } from '../context/ThemeContext';
@@ -42,6 +42,7 @@ export default function MainLayout({ navigation }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
   const [currentConversationId, setCurrentConversationId] = useState(null);
+  const [isStartingNewChat, setIsStartingNewChat] = useState(false);
   const [chatKey, setChatKey] = useState(0); // Force re-render of ChatScreen
   const [pdfPanel, setPdfPanel] = useState({ isOpen: false, docIndex: null, pageNumber: null, title: '', url: '' });
   const insets = useSafeAreaInsets();
@@ -86,7 +87,7 @@ export default function MainLayout({ navigation }) {
       // - else try last selected from AsyncStorage (if still exists)
       // - else default to most recent conversation
       let activeId = currentConversationId;
-      if (!activeId && conversations.length > 0) {
+      if (!activeId && !isStartingNewChat && conversations.length > 0) {
         let storedId = null;
         try {
           storedId = await AsyncStorage.getItem(ACTIVE_CONVERSATION_KEY);
@@ -112,7 +113,7 @@ export default function MainLayout({ navigation }) {
     } catch (error) {
       console.error('Error loading chat history:', error);
     }
-  }, [firebaseUser?.uid, currentConversationId]);
+  }, [firebaseUser?.uid, currentConversationId, isStartingNewChat]);
 
   // Load chat history on mount and when user changes
   useEffect(() => {
@@ -124,7 +125,7 @@ export default function MainLayout({ navigation }) {
 
   // Fallback: if history is loaded but no chat selected, open the most recent
   useEffect(() => {
-    if (!currentConversationId && chatHistory.length > 0) {
+    if (!currentConversationId && !isStartingNewChat && chatHistory.length > 0) {
       const fallbackId = chatHistory[0]?.id;
       if (fallbackId) {
         console.log('MainLayout: auto-opening most recent conversation', fallbackId);
@@ -135,11 +136,12 @@ export default function MainLayout({ navigation }) {
         setChatKey(prev => prev + 1);
       }
     }
-  }, [chatHistory, currentConversationId]);
+  }, [chatHistory, currentConversationId, isStartingNewChat]);
 
   const handleNavigate = (screen, params) => {
     if (screen === 'chat' && params?.chatId) {
       // Load existing conversation
+      setIsStartingNewChat(false);
       setCurrentConversationId(params.chatId);
       AsyncStorage.setItem(ACTIVE_CONVERSATION_KEY, params.chatId).catch(() => {});
       setChatHistory(prev => prev.map(chat => ({
@@ -155,6 +157,7 @@ export default function MainLayout({ navigation }) {
 
   const handleNewChat = () => {
     // Clear current conversation to start fresh
+    setIsStartingNewChat(true);
     setCurrentConversationId(null);
     apiService.setConversationId(null);
     AsyncStorage.removeItem(ACTIVE_CONVERSATION_KEY).catch(() => {});
@@ -168,6 +171,7 @@ export default function MainLayout({ navigation }) {
   // Called when a new conversation is created
   const handleNewConversation = (conversationId) => {
     console.log('handleNewConversation:', conversationId);
+    setIsStartingNewChat(false);
     setCurrentConversationId(conversationId);
     if (conversationId) {
       AsyncStorage.setItem(ACTIVE_CONVERSATION_KEY, conversationId).catch(() => {});
@@ -176,6 +180,24 @@ export default function MainLayout({ navigation }) {
     setTimeout(() => {
       loadChatHistory();
     }, 1500);
+  };
+
+  const handleRenameChat = async (chatId, newTitle) => {
+    const trimmedTitle = (newTitle || '').trim();
+    if (!chatId || !trimmedTitle) {
+      return;
+    }
+
+    try {
+      await updateConversationTitle(chatId, trimmedTitle);
+      setChatHistory(prev => prev.map(chat => (
+        chat.id === chatId
+          ? { ...chat, title: trimmedTitle }
+          : chat
+      )));
+    } catch (error) {
+      console.error('Failed to rename conversation:', error);
+    }
   };
 
   const handleCloseSidebar = () => {
@@ -237,6 +259,7 @@ export default function MainLayout({ navigation }) {
             onNavigate={handleNavigate}
             chatHistory={chatHistory}
             onNewChat={handleNewChat}
+            onRenameChat={handleRenameChat}
             isLargeScreen={isLargeScreen}
           />
 

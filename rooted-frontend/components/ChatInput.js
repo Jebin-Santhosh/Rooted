@@ -71,7 +71,11 @@ export default function ChatInput({
         style={styles.attachButton}
         onPress={() => setShowAttachmentMenu(prev => !prev)}
       >
-        <MaterialIcons name="add" size={24} color={colors.neutral[500]} />
+        <MaterialIcons
+          name="add"
+          size={24}
+          color={isDark ? colors.neutral[300] : colors.neutral[500]}
+        />
       </TouchableOpacity>
 
       {/* Attachment Popup */}
@@ -92,11 +96,11 @@ export default function ChatInput({
 
       <TextInput
         ref={inputRef}
-        style={styles.input}
+        style={[styles.input, isDark && styles.inputDark]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={colors.neutral[400]}
+        placeholderTextColor={isDark ? colors.neutral[300] : colors.neutral[400]}
         multiline
         maxLength={maxLength}
         editable={!isLoading}
@@ -182,6 +186,9 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' && {
       outlineStyle: 'none',
     }),
+  },
+  inputDark: {
+    color: colors.neutral[50],
   },
   rightButtons: {
     flexDirection: 'row',

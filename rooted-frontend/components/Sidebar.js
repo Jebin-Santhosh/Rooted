@@ -3,7 +3,7 @@
  * RootED - Glassy blue design matching landing page
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -26,21 +26,36 @@ const { colors, spacing, borderRadius, typography } = designSystem;
 
 const SIDEBAR_WIDTH = 280;
 
-const ChatHistoryItem = ({ title, isActive, onPress }) => (
-  <TouchableOpacity
-    style={[styles.chatHistoryItem, isActive && styles.chatHistoryItemActive]}
-    onPress={onPress}
-    activeOpacity={0.7}
-  >
-    <MaterialIcons
-      name="chat-bubble-outline"
-      size={16}
-      color={isActive ? colors.primary[500] : colors.neutral[500]}
-    />
-    <Text style={[styles.chatHistoryTitle, isActive && styles.chatHistoryTitleActive]} numberOfLines={1}>
-      {title}
-    </Text>
-  </TouchableOpacity>
+const ChatHistoryItem = ({ title, isActive, onPress, onRename }) => (
+  <View style={[styles.chatHistoryItem, isActive && styles.chatHistoryItemActive]}>
+    <TouchableOpacity
+      style={styles.chatHistoryMain}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <MaterialIcons
+        name="chat-bubble-outline"
+        size={16}
+        color={isActive ? colors.primary[500] : colors.neutral[500]}
+      />
+      <Text style={[styles.chatHistoryTitle, isActive && styles.chatHistoryTitleActive]} numberOfLines={1}>
+        {title}
+      </Text>
+    </TouchableOpacity>
+    <TouchableOpacity
+      onPress={onRename}
+      style={styles.renameButton}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel="Rename conversation"
+    >
+      <MaterialIcons
+        name="edit"
+        size={16}
+        color={isActive ? colors.primary[500] : colors.neutral[500]}
+      />
+    </TouchableOpacity>
+  </View>
 );
 
 const MenuItem = ({ icon, label, onPress, danger = false }) => (
@@ -66,12 +81,18 @@ export default function Sidebar({
   onNavigate,
   chatHistory = [],
   onNewChat,
+  onRenameChat,
   isLargeScreen = false,
 }) {
   const insets = useSafeAreaInsets();
   const { userProfile, logout } = useOnboarding();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const { isDark } = useThemeMode();
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [userProfile?.photoUrl]);
 
   // Get user initials
   const getInitials = () => {
@@ -138,6 +159,42 @@ export default function Sidebar({
         ]
       );
     }
+  };
+
+  const handleRenameConversation = (chat) => {
+    if (!chat?.id) return;
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const enteredTitle = window.prompt('Rename conversation', chat.title || '');
+      if (enteredTitle === null) return;
+      const trimmedTitle = enteredTitle.trim();
+      if (!trimmedTitle) return;
+      onRenameChat?.(chat.id, trimmedTitle);
+      return;
+    }
+
+    if (typeof Alert.prompt === 'function') {
+      Alert.prompt(
+        'Rename conversation',
+        'Enter a new chat title',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Save',
+            onPress: (enteredTitle) => {
+              const trimmedTitle = (enteredTitle || '').trim();
+              if (!trimmedTitle) return;
+              onRenameChat?.(chat.id, trimmedTitle);
+            }
+          }
+        ],
+        'plain-text',
+        chat.title || ''
+      );
+      return;
+    }
+
+    Alert.alert('Rename conversation', 'Renaming is supported on web and iOS prompt flow.');
   };
 
   // Don't render anything if closed
@@ -210,6 +267,7 @@ export default function Sidebar({
                   title={chat.title}
                   isActive={chat.isActive}
                   onPress={() => onNavigate('chat', { chatId: chat.id })}
+                  onRename={() => handleRenameConversation(chat)}
                 />
               ))
             ) : (
@@ -229,14 +287,15 @@ export default function Sidebar({
         {/* Profile Section */}
         <View style={[styles.profileSection, { paddingBottom: insets.bottom + spacing[3] }]}>
           <TouchableOpacity
-            style={styles.profileCard}
+            style={[styles.profileCard, isDark && styles.profileCardDark]}
             onPress={() => setShowProfileMenu(!showProfileMenu)}
             activeOpacity={0.7}
           >
-            {userProfile?.photoUrl ? (
+            {userProfile?.photoUrl && !avatarLoadFailed ? (
               <Image
                 source={{ uri: userProfile.photoUrl }}
                 style={styles.profileAvatar}
+                onError={() => setAvatarLoadFailed(true)}
               />
             ) : (
               <View style={styles.profileAvatarPlaceholder}>
@@ -403,6 +462,20 @@ const styles = StyleSheet.create({
     gap: spacing[2],
     marginBottom: spacing[1],
   },
+  chatHistoryMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+    minWidth: 0,
+  },
+  renameButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   chatHistoryItemActive: {
     backgroundColor: colors.primary[50],
     borderWidth: 1,
@@ -452,11 +525,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.neutral[200],
   },
+  profileCardDark: {
+    backgroundColor: 'rgba(30, 41, 59, 0.9)',
+    borderColor: 'rgba(148, 163, 184, 0.4)',
+  },
   profileAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: colors.neutral[200],
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.45)',
   },
   profileAvatarPlaceholder: {
     width: 40,

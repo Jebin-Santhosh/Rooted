@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
-import { Appearance } from 'react-native';
+import React, { createContext, useContext, useMemo, useState } from 'react';
 
 const ThemeContext = createContext({
   mode: 'light',
@@ -8,8 +7,7 @@ const ThemeContext = createContext({
 });
 
 export function ThemeProvider({ children }) {
-  const systemScheme = Appearance.getColorScheme();
-  const [mode, setMode] = useState(systemScheme === 'dark' ? 'dark' : 'light');
+  const [mode, setMode] = useState('light');
 
   const toggleTheme = () => {
     setMode((prev) => (prev === 'light' ? 'dark' : 'light'));

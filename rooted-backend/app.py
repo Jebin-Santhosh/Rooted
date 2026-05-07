@@ -6,26 +6,24 @@ A truly agentic chatbot with dynamic planning, iterative search, and self-evalua
 import os
 import json
 import re
-import io
 import base64
 from typing import Dict, List, Any, TypedDict, Annotated, Optional, Literal
 from datetime import datetime
 import asyncio
 from pathlib import Path
+import requests
 
-from PIL import Image
 from fastapi import UploadFile, File
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.llms import Ollama
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, BaseMessage
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 import chromadb
-from google import genai
 
 #API Key
 from dotenv import load_dotenv
@@ -38,10 +36,11 @@ from firebase_admin import credentials, firestore
 
 
 # Configuration
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-# Use stable, publicly available Gemini 2.0 Flash model by default
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-EMBEDDING_MODEL = "text-embedding-004"
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3")
+OLLAMA_VISION_MODEL = os.getenv("OLLAMA_VISION_MODEL", "llava")
+OLLAMA_STARTUP_RETRIES = int(os.getenv("OLLAMA_STARTUP_RETRIES", "3"))
+OLLAMA_STARTUP_RETRY_DELAY_SECONDS = float(os.getenv("OLLAMA_STARTUP_RETRY_DELAY_SECONDS", "1.5"))
 DATA_PATH = os.getenv("DATA_PATH", "/data")
 INDEX_PATH = os.getenv("INDEX_PATH", "/rooted-backend/index.json")
 
@@ -288,15 +287,6 @@ Keywords: {', '.join(doc.get('keywords', [])[:15])}
 # ChromaDB Search Functions
 # ============================================
 
-def get_embedding(text: str) -> List[float]:
-    """Generate embedding using Gemini."""
-    if not GEMINI_API_KEY:
-        raise ValueError("GEMINI_API_KEY not configured")
-    client = genai.Client(api_key=GEMINI_API_KEY)
-    response = client.models.embed_content(model=EMBEDDING_MODEL, contents=[text])
-    return response.embeddings[0].values
-
-
 def search_knowledge_base(
     query: str,
     n_results: int = 5,
@@ -320,10 +310,8 @@ def search_knowledge_base(
         try:
             db = chromadb.PersistentClient(path=chroma_path)
             collection = db.get_collection(name="documents")
-            query_embedding = get_embedding(query)
-
             search_results = collection.query(
-                query_embeddings=[query_embedding],
+                query_texts=[query],
                 n_results=n_results,
                 include=["documents", "metadatas", "distances"]
             )
@@ -405,13 +393,111 @@ def dict_to_messages(dict_list: List[Dict[str, str]]) -> List[BaseMessage]:
     return result
 
 
-def get_llm(temperature: float = 0.7) -> ChatGoogleGenerativeAI:
-    """Get configured LLM instance."""
-    return ChatGoogleGenerativeAI(
-        model=GEMINI_MODEL,
-        temperature=temperature,
-        google_api_key=GEMINI_API_KEY
+class OllamaLLMAdapter:
+    """Adapter that provides a chat-like invoke interface over Ollama LLM."""
+
+    def __init__(self, temperature: float = 0.7):
+        self.llm = Ollama(
+            model=OLLAMA_MODEL,
+            base_url=OLLAMA_BASE_URL,
+            temperature=temperature,
+        )
+
+    def _serialize_messages(self, messages: List[BaseMessage]) -> str:
+        chunks: List[str] = []
+        for msg in messages:
+            role = "User"
+            if isinstance(msg, SystemMessage):
+                role = "System"
+            elif isinstance(msg, AIMessage):
+                role = "Assistant"
+            content = msg.content if isinstance(msg.content, str) else json.dumps(msg.content)
+            chunks.append(f"{role}: {content}")
+        return "\n\n".join(chunks)
+
+    def invoke(self, input_data: Any) -> AIMessage:
+        if isinstance(input_data, list):
+            prompt = self._serialize_messages(input_data)
+        else:
+            prompt = str(input_data)
+        response_text = self.llm.invoke(prompt)
+        if not isinstance(response_text, str):
+            response_text = str(response_text)
+        return AIMessage(content=response_text)
+
+
+def get_llm(temperature: float = 0.7) -> OllamaLLMAdapter:
+    """Get configured local Ollama LLM instance."""
+    return OllamaLLMAdapter(temperature=temperature)
+
+
+async def check_ollama_ready() -> None:
+    """
+    Validate Ollama connectivity and model availability at startup.
+    Raises RuntimeError if checks fail after retries.
+    """
+    last_error: Optional[Exception] = None
+
+    for attempt in range(1, OLLAMA_STARTUP_RETRIES + 1):
+        try:
+            llm = get_llm(temperature=0.0)
+            probe = llm.invoke("Reply with exactly: OK")
+            if not probe.content or not probe.content.strip():
+                raise RuntimeError("Ollama returned an empty probe response")
+            print(f"Ollama readiness check passed (attempt {attempt})")
+            return
+        except Exception as exc:
+            last_error = exc
+            if attempt < OLLAMA_STARTUP_RETRIES:
+                print(
+                    f"Ollama readiness check failed (attempt {attempt}/{OLLAMA_STARTUP_RETRIES}): {exc}. "
+                    f"Retrying in {OLLAMA_STARTUP_RETRY_DELAY_SECONDS}s..."
+                )
+                await asyncio.sleep(OLLAMA_STARTUP_RETRY_DELAY_SECONDS)
+
+    raise RuntimeError(
+        f"Ollama startup check failed after {OLLAMA_STARTUP_RETRIES} attempts "
+        f"(base_url={OLLAMA_BASE_URL}, model={OLLAMA_MODEL}): {last_error}"
     )
+
+
+def build_dental_context(query: str, n_results: int = 5) -> str:
+    """Build concise dental PDF context for the user query."""
+    snippets = search_knowledge_base(query=query, n_results=n_results)
+    if not snippets:
+        return "No indexed dental PDF passages were found for this query."
+
+    context_lines = []
+    for i, item in enumerate(snippets, start=1):
+        context_lines.append(
+            f"[{i}] Source: {item.get('source', 'Unknown')}\n"
+            f"Content: {item.get('content', '').strip()}"
+        )
+    return "\n\n".join(context_lines)
+
+
+def generate_response(query: str) -> str:
+    """
+    Generate a production-ready response using local Ollama (Llama3)
+    and dental PDF context from the knowledge base.
+    """
+    context = build_dental_context(query=query, n_results=6)
+    llm = get_llm(temperature=0.2)
+    prompt = f"""You are RootED, an expert dental assistant.
+
+Answer the user's query using the provided dental context.
+If context is incomplete, state uncertainty clearly and provide safe guidance.
+Do not fabricate citations or clinical certainty.
+
+Dental Context:
+{context}
+
+User Query:
+{query}
+
+Response:
+"""
+    return llm.invoke(prompt).content.strip()
 
 
 def parse_json_response(response: str) -> Dict:
@@ -811,6 +897,7 @@ research_agent = None
 @app.on_event("startup")
 async def startup_event():
     global research_agent
+    await check_ollama_ready()
     load_document_index()
     research_agent = create_research_agent()
     init_firebase()  # Initialize Firebase for conversation storage
@@ -826,48 +913,21 @@ async def startup_event():
 
 async def dental_diagnosis_engine(message: str) -> Dict[str, Any]:
     """
-    Structured Dental Diagnosis using Gemini.
+    Structured dental diagnosis using local Llama3.
     Returns strict JSON output.
     """
-    llm = get_llm(temperature=0.3)
-
-    prompt = f"""
-You are an AI Dental Diagnostic Assistant.
-
-Analyze the patient's symptoms carefully.
-
-Return STRICTLY valid JSON with these fields:
-
-- condition
-- severity (Mild / Moderate / Severe / Emergency)
-- confidence (Low / Medium / High)
-- recommended_action
-- urgent (Yes / No)
-- explanation
-- disclaimer
-
-Rules:
-- Do not return normal text.
-- Do not add markdown.
-- Only return pure JSON.
-- Always include disclaimer:
-  "This AI-generated analysis is not a substitute for professional dental consultation."
-
-Patient Symptoms:
-{message}
-"""
-
-    response = llm.invoke([HumanMessage(content=prompt)])
-
-    parsed = parse_json_response(response.content)
-
-    if not parsed:
-        return {
-            "error": "Failed to parse AI response",
-            "raw_output": response.content
-        }
-
-    return parsed
+    diagnosis_text = generate_response(
+        f"Provide a structured dental diagnosis for these symptoms:\n{message}"
+    )
+    return {
+        "condition": "Preliminary AI assessment",
+        "severity": "Needs clinical validation",
+        "confidence": "Medium",
+        "recommended_action": diagnosis_text,
+        "urgent": "Depends on symptoms",
+        "explanation": "Generated using local Llama3 with indexed dental context.",
+        "disclaimer": "This AI-generated analysis is not a substitute for professional dental consultation.",
+    }
 
 # ============================================
 # Diagnostic Mode (Default Clinical Mode)
@@ -879,35 +939,8 @@ async def diagnostic_mode(message: str) -> Dict[str, Any]:
     This is the default mode.
     """
 
-    llm = get_llm(temperature=0.3)
-
-    prompt = f"""
-You are a clinical dental AI assistant.
-
-A patient describes symptoms:
-
-"{message}"
-
-Generate a structured clinical response in this format:
-
-1. Most Probable Diagnosis
-2. Differential Diagnosis (3–5 possible causes)
-3. Severity Level (Mild / Moderate / Severe / Emergency)
-4. Urgency Level (Low / Medium / High / Immediate)
-5. When to See a Dentist
-6. Immediate Home Advice
-7. Disclaimer (Not a substitute for professional diagnosis)
-
-Keep tone professional and patient-friendly.
-Avoid making absolute claims.
-Do NOT say “I am not a doctor” repeatedly.
-Be structured and clean.
-"""
-
-    response = llm.invoke([HumanMessage(content=prompt)])
-
     return {
-        "response": response.content,
+        "response": generate_response(message),
         "mode": "diagnose"
     }
 
@@ -916,45 +949,58 @@ Be structured and clean.
 # Diagnostic Image
 # ============================================
 
-async def diagnose_image_with_gemini(image_bytes: bytes) -> str:
+async def diagnose_image_with_llama(image_bytes: bytes) -> str:
     """
-    Analyze dental image using Gemini Vision.
+    Analyze a dental image using an Ollama vision model (e.g., llava).
     """
-
-    llm = get_llm(temperature=0.3)
-
-    image = Image.open(io.BytesIO(image_bytes))
-
     prompt = """
 You are a dental AI diagnostic assistant.
 
-Analyze this dental image (X-ray or oral photograph).
+Analyze this dental image carefully and provide:
 
-Return structured clinical response in this format:
+1. Most Probable Diagnosis
+2. Observed Findings
+3. Severity Level (Mild / Moderate / Severe)
+4. Urgency Level (Routine / Soon / Emergency)
+5. Recommended Next Steps
+6. Disclaimer (AI-generated, not a substitute for professional diagnosis)
 
-1. Observations
-2. Most Probable Diagnosis
-3. Differential Diagnosis
-4. Severity Level (Mild / Moderate / Severe / Emergency)
-5. Urgency Level (Low / Medium / High / Immediate)
-6. Recommended Next Step
-7. Disclaimer
-
-Be clinically cautious.
-Do NOT hallucinate.
-If unclear, say image quality insufficient.
+Be clinically cautious and explicit about uncertainty.
 """
 
-    response = llm.invoke([
-        HumanMessage(
-            content=[
-                {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," + base64.b64encode(image_bytes).decode()}}
-            ]
-        )
-    ])
+    encoded_image = base64.b64encode(image_bytes).decode("utf-8")
+    payload = {
+        "model": OLLAMA_VISION_MODEL,
+        "prompt": prompt,
+        "images": [encoded_image],
+        "stream": False,
+    }
 
-    return response.content
+    def _call_ollama() -> str:
+        response = requests.post(
+            f"{OLLAMA_BASE_URL.rstrip('/')}/api/generate",
+            json=payload,
+            timeout=120,
+        )
+        response.raise_for_status()
+        data = response.json()
+        return (data.get("response") or "").strip()
+
+    try:
+        analysis = await asyncio.to_thread(_call_ollama)
+    except requests.RequestException as exc:
+        raise RuntimeError(
+            f"Ollama vision request failed for model '{OLLAMA_VISION_MODEL}'. "
+            f"Ensure Ollama is running and pull the model with: ollama pull {OLLAMA_VISION_MODEL}. "
+            f"Error: {exc}"
+        ) from exc
+
+    if not analysis:
+        raise RuntimeError(
+            f"Ollama vision model '{OLLAMA_VISION_MODEL}' returned an empty response."
+        )
+
+    return analysis
 
 
 # ============================================
@@ -987,7 +1033,8 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "version": "3.0.0",
-        "gemini_configured": bool(GEMINI_API_KEY),
+        "llm_provider": "ollama",
+        "llm_model": OLLAMA_MODEL,
         "collections": collections,
         "indexed_documents": doc_count
     }
@@ -1013,10 +1060,9 @@ async def search_endpoint(request: Request):
 
 @app.post("/chat")
 async def chat(request: Request):
-    """Smart chat with automatic deep research when needed."""
+    """Chat endpoint backed by local Ollama with dental PDF context."""
     data = await request.json()
     message = data.get("message", "").strip()
-    mode = data.get("mode", "diagnose")  # default mode
     session_id = data.get("session_id", "default")
     user_id = data.get("user_id")  # Firebase user ID
     conversation_id = data.get("conversation_id")  # Firestore conversation ID
@@ -1024,95 +1070,22 @@ async def chat(request: Request):
     if not message:
         raise HTTPException(status_code=400, detail="Message is required")
 
-        # Load conversation history
-    history = []
-    if session_id in conversation_memory:
-        history = dict_to_messages(conversation_memory[session_id])        
+    response = generate_response(message)
 
-# ============================================
-# Diagnostic Mode (Default)
-# ============================================
-    if mode == "diagnose":
-        result = await diagnostic_mode(message)
+    history = dict_to_messages(conversation_memory.get(session_id, []))
+    history.append(HumanMessage(content=message))
+    history.append(AIMessage(content=response))
+    conversation_memory[session_id] = messages_to_dict(history)
 
-        return {
-            "response": result["response"],
-            "session_id": session_id,
-            "research_mode": "diagnose"
-        }
+    if user_id and conversation_id:
+        await save_conversation_to_firebase(user_id, conversation_id, message, response, "diagnose")
+        await update_user_progress(user_id, messages_added=2, conversations_added=0)
 
-        # ============================================
-        # DEEP RESEARCH MODE
-        # ============================================
-
-        result = await research_agent.ainvoke({
-            "messages": history + [HumanMessage(content=message)],
-            "user_id": user_id or "user",
-            "session_id": session_id,
-            "original_question": message,
-            "research_plan": None,
-            "iteration": 0,
-            "search_history": [],
-            "accumulated_knowledge": [],
-            "confidence_score": 0.0,
-            "knowledge_gaps": [],
-            "is_complete": False,
-            "thinking_process": [],
-            "final_answer": None
-        })
-
-        answer = result.get("final_answer", "I couldn't find enough information to answer this question.")
-        sources_list = list(set([k.get("source", "") for k in result.get("accumulated_knowledge", [])[:8]]))
-
-        return {
-            "response": answer,
-            "session_id": session_id,
-            "research_mode": "deep",
-            "iterations": result.get("iteration", 0),
-            "confidence": result.get("confidence_score", 0)
-        }
-
-
-        # Determine if deep research is needed
-        analysis = await should_deep_research(message)
-        sources_list = []
-
-        if not analysis.get("needs_research", True):
-            # Simple response
-            response = await simple_chat(message, history)
-            history.append(HumanMessage(content=message))
-            history.append(AIMessage(content=response))
-            conversation_memory[session_id] = messages_to_dict(history)
-
-            # Save to Firebase if user_id provided
-            if user_id and conversation_id:
-                await save_conversation_to_firebase(
-                    user_id, conversation_id, message, response, "quick"
-                )
-                await update_user_progress(user_id, messages_added=2, conversations_added=0)
-
-
-        # Update history
-        history.append(HumanMessage(content=message))
-        history.append(AIMessage(content=answer))
-        conversation_memory[session_id] = messages_to_dict(history)
-
-        # Save to Firebase if user_id provided
-        if user_id and conversation_id:
-            await save_conversation_to_firebase(
-                user_id, conversation_id, message, answer, "deep", sources_list
-            )
-            await update_user_progress(user_id, messages_added=2, conversations_added=0)
-
-        return {
-            "response": answer,
-            "session_id": session_id,
-            "research_mode": "deep",
-            "iterations": result.get("iteration", 0),
-            "sources_used": len(result.get("accumulated_knowledge", [])),
-            "confidence": result.get("confidence_score", 0),
-            "thinking": result.get("thinking_process", [])
-        }
+    return {
+        "response": response,
+        "session_id": session_id,
+        "research_mode": "diagnose",
+    }
 
 
 
@@ -1142,54 +1115,12 @@ async def diagnose_image(file: UploadFile = File(...)):
     Analyze dental image (X-ray / oral photo) and return structured diagnosis.
     """
 
-    if not GEMINI_API_KEY:
-        raise HTTPException(status_code=500, detail="Gemini API not configured")
-
     try:
-        # Read image bytes
         image_bytes = await file.read()
-        encoded_image = base64.b64encode(image_bytes).decode("utf-8")
-
-        client = genai.Client(api_key=GEMINI_API_KEY)
-
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=[
-                {
-                    "role": "user",
-                    "parts": [
-                        {
-                            "inline_data": {
-                                "mime_type": file.content_type,
-                                "data": encoded_image,
-                            }
-                        },
-                        {
-                            "text": """
-You are a dental AI diagnostic assistant.
-
-Analyze this dental image carefully.
-
-Provide structured output in this format:
-
-1. Most Probable Diagnosis
-2. Observed Findings
-3. Severity Level (Mild / Moderate / Severe)
-4. Urgency Level (Routine / Soon / Emergency)
-5. Recommended Next Steps
-6. Disclaimer (AI-generated, not a substitute for professional diagnosis)
-
-Be clinically responsible.
-Do not hallucinate certainty.
-"""
-                        }
-                    ],
-                }
-            ],
-        )
+        analysis = await diagnose_image_with_llama(image_bytes)
 
         return {
-            "analysis": response.text,
+            "analysis": analysis,
             "mode": "image_diagnosis"
         }
 
@@ -1199,10 +1130,9 @@ Do not hallucinate certainty.
 
 @app.post("/chat/stream")
 async def chat_stream(request: Request):
-    """Streaming chat with research progress updates."""
+    """Streaming chat backed by local Ollama and dental context."""
     data = await request.json()
     message = data.get("message", "").strip()
-    mode = data.get("mode", "diagnose")
     session_id = data.get("session_id", "default")
     user_id = data.get("user_id")  # Firebase user ID
     conversation_id = data.get("conversation_id")  # Firestore conversation ID
@@ -1211,117 +1141,28 @@ async def chat_stream(request: Request):
         raise HTTPException(status_code=400, detail="Message is required")
 
     async def generate():
-        history = []
-        if session_id in conversation_memory:
-            history = dict_to_messages(conversation_memory[session_id])
+        history = dict_to_messages(conversation_memory.get(session_id, []))
+        yield f"data: {json.dumps({'type': 'status', 'content': 'Retrieving dental context...'})}\n\n"
 
-        # =============================
-        # DIAGNOSE MODE
-        # =============================
-        if mode == "diagnose":
-
-            yield f"data: {json.dumps({'type': 'status', 'content': '🦷 Running clinical diagnostic analysis...'})}\n\n"
-
-            result = await diagnostic_mode(message)
-            response = result["response"]
-
-            for chunk in [response[i:i+40] for i in range(0, len(response), 40)]:
-                yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
-                await asyncio.sleep(0.02)
-
-            # Update in-memory history
-            history.append(HumanMessage(content=message))
-            history.append(AIMessage(content=response))
-            conversation_memory[session_id] = messages_to_dict(history)
-
-            # Save to Firebase (so chat history persists on reload)
-            if user_id and conversation_id:
-                await save_conversation_to_firebase(user_id, conversation_id, message, response, "diagnose")
-                await update_user_progress(user_id, messages_added=2)
-
-            yield f"data: {json.dumps({'type': 'done', 'research_mode': 'diagnose', 'conversation_id': conversation_id})}\n\n"
-            return
-
-        # Check if deep research needed
-        yield f"data: {json.dumps({'type': 'status', 'content': 'Analyzing question...'})}\n\n"
-        analysis = await should_deep_research(message)
-
-        if not analysis.get("needs_research", True):
-            yield f"data: {json.dumps({'type': 'status', 'content': 'Quick response mode'})}\n\n"
-            response = await simple_chat(message, history)
-
-            # Stream the response
-            for chunk in [response[i:i+50] for i in range(0, len(response), 50)]:
-                yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
-                await asyncio.sleep(0.02)
-
-            history.append(HumanMessage(content=message))
-            history.append(AIMessage(content=response))
-            conversation_memory[session_id] = messages_to_dict(history)
-
-            # Save to Firebase
-            if user_id and conversation_id:
-                await save_conversation_to_firebase(user_id, conversation_id, message, response, "quick")
-                await update_user_progress(user_id, messages_added=2)
-
-            yield f"data: {json.dumps({'type': 'done', 'research_mode': 'quick'})}\n\n"
-            return
-
-        # Deep research mode with progress updates
-        yield f"data: {json.dumps({'type': 'status', 'content': '🔬 Starting deep research...'})}\n\n"
-
-        # Run research agent
-        result = await research_agent.ainvoke({
-            "messages": history + [HumanMessage(content=message)],
-            "user_id": user_id or "user",
-            "session_id": session_id,
-            "original_question": message,
-            "research_plan": None,
-            "iteration": 0,
-            "search_history": [],
-            "accumulated_knowledge": [],
-            "confidence_score": 0.0,
-            "knowledge_gaps": [],
-            "is_complete": False,
-            "thinking_process": [],
-            "final_answer": None
-        })
-
-        answer = result.get("final_answer", "No information found.")
-
-        # Send thinking process
-        for thought in result.get("thinking_process", []):
-            yield f"data: {json.dumps({'type': 'thinking', 'content': thought})}\n\n"
-            await asyncio.sleep(0.1)
-
-        # Send sources
-        sources = [k["source"] for k in result.get("accumulated_knowledge", [])[:8]]
+        context_snippets = search_knowledge_base(message, n_results=6)
+        sources = list({item.get("source", "") for item in context_snippets if item.get("source")})
         if sources:
-            yield f"data: {json.dumps({'type': 'sources', 'content': list(set(sources))})}\n\n"
+            yield f"data: {json.dumps({'type': 'sources', 'content': sources})}\n\n"
 
-        # Stream the final answer
-        answer = result.get("final_answer", "I couldn't find enough information.")
-        yield f"data: {json.dumps({'type': 'status', 'content': '✨ Generating answer...'})}\n\n"
-
-        # Stream in chunks for smooth display
-        chunk_size = 30
-        for i in range(0, len(answer), chunk_size):
-            chunk = answer[i:i+chunk_size]
+        answer = generate_response(message)
+        for chunk in [answer[i:i+40] for i in range(0, len(answer), 40)]:
             yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
-            await asyncio.sleep(0.015)
+            await asyncio.sleep(0.02)
 
-        # Update history
         history.append(HumanMessage(content=message))
         history.append(AIMessage(content=answer))
         conversation_memory[session_id] = messages_to_dict(history)
 
-        # Save to Firebase
         if user_id and conversation_id:
-            sources_list = list(set(sources)) if sources else []
-            await save_conversation_to_firebase(user_id, conversation_id, message, answer, "deep", sources_list)
+            await save_conversation_to_firebase(user_id, conversation_id, message, answer, "diagnose", sources)
             await update_user_progress(user_id, messages_added=2)
 
-        yield f"data: {json.dumps({'type': 'done', 'research_mode': 'deep', 'iterations': result.get('iteration', 0), 'confidence': result.get('confidence_score', 0)})}\n\n"
+        yield f"data: {json.dumps({'type': 'done', 'research_mode': 'diagnose', 'conversation_id': conversation_id})}\n\n"
 
     return StreamingResponse(generate(), media_type="text/event-stream")
 
@@ -1352,8 +1193,8 @@ if __name__ == "__main__":
     print("=" * 60)
     print("RootED v3.0 - Intelligent Agentic Research System")
     print("=" * 60)
-    print(f"Gemini: {'Configured' if GEMINI_API_KEY else 'NOT SET'}")
-    print(f"Model: {GEMINI_MODEL}")
+    print("LLM Provider: Ollama")
+    print(f"Model: {OLLAMA_MODEL}")
     print("=" * 60)
 
     load_document_index()
